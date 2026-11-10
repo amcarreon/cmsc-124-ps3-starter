@@ -49,15 +49,37 @@ name. Signal an error when NAME is not bound at all."
 
 MAPCAR and a LAMBDA do this in one line. Watch the arity: EVAL-EXPR takes two
 arguments and MAPCAR hands its function one."
-  (declare (ignore exprs env))
-  (error "eval-operands is not implemented"))
+    ;; evaluates each expression in the list using eval-expr
+    ;; lambda receives one expression at a time from mapcar
+    (mapcar (lambda (expr)
+        (eval-expr expr env))
+        exprs)
+)
 
 (defun apply-op (op values)
   "Apply the arithmetic operator OP to the two numbers in VALUES.
 
 OP is the symbol +, -, or *. Signal an error for anything else."
-  (declare (ignore op values))
-  (error "apply-op is not implemented"))
+
+    ;; checks if the operator is +, -, or *
+    (unless (member op '(+ - *) :test #'eq)
+        (error "Unknown arithmetic operator: ~a" op))
+
+    ;; checks if there are exactly two operands
+    (unless (= (length values) 2)
+        (error "Arithmetic requires exactly two operands"))
+
+    ;; checks if all operands are numbers
+    (unless (every #'numberp values)
+        (error "Arithmetic operands must be numbers"))
+        
+    ;; performs the operation based on the given operator
+    (case op
+        (+ (+ (first values) (second values)))
+        (- (- (first values) (second values)))
+        (* (* (first values) (second values))))
+)
+
 
 ;;; E3 -- let.
 
@@ -112,5 +134,12 @@ number is not a cons, so the atom tests come before the list tests."
     ;; symbol goes through lookup
     ((symbolp expr)
       (lookup expr env))
+
+    ;; arithmetic expressions
+    ((and (consp expr)
+          (member (car expr) '(+ - *)))
+        (apply-op
+          (car expr)
+          (eval-operands (cdr expr) env)))
   )
 )
