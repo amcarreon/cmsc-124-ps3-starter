@@ -26,8 +26,21 @@
 
 The first match wins, so an inner binding shadows an outer one that shares its
 name. Signal an error when NAME is not bound at all."
-  (declare (ignore name env))
-  (error "lookup is not implemented"))
+  (cond
+    ;; base case, unbound symbol flags an error
+    ((null env)
+      (error "unbound error: ~a" name))
+
+    ;; finds first pair with matching name
+    ;; car env is first pair -> (car (car env)) is the name of that pair
+    ((eq name (car (car env)))
+      ;; (cdr (car env)) is the value of the pair
+      (cdr (car env)))
+
+    ;; no match so it looks at the rest of the items by recursion
+    (t (lookup name (cdr env)))
+  )
+)
 
 ;;; E2 -- prefix arithmetic.
 
@@ -91,5 +104,13 @@ CLOSURE is not a closure, and when the argument count does not match."
 
 Order the branches with care. NIL is a symbol as well as the empty list, and a
 number is not a cons, so the atom tests come before the list tests."
-  (declare (ignore expr env))
-  (error "eval-expr is not implemented"))
+  (cond
+    ;; number evaluates to itself
+    ((numberp expr)
+      expr)
+
+    ;; symbol goes through lookup
+    ((symbolp expr)
+      (lookup expr env))
+  )
+)
